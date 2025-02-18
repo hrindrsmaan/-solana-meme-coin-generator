@@ -78,7 +78,7 @@ export function MemeCoinGenerator({
     }
 
     const supply = BigInt(formData.tokenSupply);
-    if (supply <= 0n) {
+    if (supply <= 0) {
       newErrors.tokenSupply = "Supply must be a positive number";
       isValid = false;
     }
@@ -199,7 +199,7 @@ export function MemeCoinGenerator({
       resetForm();
     } catch (error) {
       console.error("Error creating token:", error);
-      setStatus(`Error creating token: ${error.message}`);
+      setStatus(`Error creating token}`);
     } finally {
       setIsLoading(false);
     }

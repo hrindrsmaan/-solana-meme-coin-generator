@@ -41,7 +41,7 @@ export function WalletConnection() {
           // Get network from environment variable, fallback to mainnet-beta for safety
           const network =
             process.env.NEXT_PUBLIC_SOLANA_NETWORK || "mainnet-beta";
-          const connection = new Connection(clusterApiUrl(network));
+          const connection = new Connection(clusterApiUrl(network as any));
 
           // Add some logging in development
           if (process.env.NODE_ENV === "development") {
