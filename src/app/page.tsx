@@ -25,10 +25,10 @@ export default function Home() {
         </h1>
 
         <WalletConnection />
-        <MemeCoinGenerator
+        {/* <MemeCoinGenerator
           isWalletConnected={isConnected}
           walletAddress={walletAddress}
-        />
+        /> */}
       </div>
     </main>
   );
