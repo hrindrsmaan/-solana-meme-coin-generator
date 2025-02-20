@@ -1,15 +1,19 @@
-"use client";
+// wallet-connection.tsx
 
-/* eslint-disable */
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Wallet, Coins, ExternalLink, RefreshCcw } from "lucide-react";
+import { Wallet, ExternalLink, RefreshCcw, Coins } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
 
-export function WalletConnection() {
+interface WalletConnectionProps {
+  onWalletChange: (connected: boolean, walletAddress: string) => void;
+}
+
+export function WalletConnection({ onWalletChange }: WalletConnectionProps) {
   const [walletAddress, setWalletAddress] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [status, setStatus] = useState("");
@@ -40,12 +44,10 @@ export function WalletConnection() {
         const publicKey = solana.publicKey;
 
         if (publicKey) {
-          // Get network from environment variable, fallback to mainnet-beta for safety
           const network =
             process.env.NEXT_PUBLIC_SOLANA_NETWORK || "mainnet-beta";
           const connection = new Connection(clusterApiUrl(network as any));
 
-          // Add some logging in development
           if (process.env.NODE_ENV === "development") {
             console.log(`Using Solana ${network} network`);
           }
@@ -53,19 +55,16 @@ export function WalletConnection() {
           const rawBalance = await connection.getBalance(
             new PublicKey(walletAddress)
           );
-
           const solBalance = rawBalance / 1e9;
           setBalance(solBalance);
 
-          // Only fetch price for mainnet-beta, use placeholder for devnet
           if (network === "mainnet-beta") {
             const solPrice = await fetchSolPrice();
             if (solPrice) {
               setUsdValue(solBalance * solPrice);
             }
           } else {
-            // For devnet, show placeholder USD value
-            setUsdValue(solBalance * 0); // or any placeholder value you prefer
+            setUsdValue(solBalance * 0);
           }
         }
       }
@@ -88,13 +87,14 @@ export function WalletConnection() {
       if (solana?.isPhantom) {
         const response = await solana.connect({ onlyIfTrusted: true });
         if (response.publicKey) {
-          setWalletAddress(response.publicKey.toString());
+          const addr = response.publicKey.toString();
+          setWalletAddress(addr);
           setIsConnected(true);
+          onWalletChange(true, addr); // Update parent's state
           getWalletBalance();
         }
       }
     } catch (error) {
-      // It's normal for this to fail if the wallet hasn't been previously connected
       console.log("Wallet not pre-authorized:", error);
     }
   };
@@ -102,20 +102,17 @@ export function WalletConnection() {
   const connectWallet = async () => {
     try {
       const { solana } = window as any;
-
-      console.log(`connectWallet: ${solana}`);
-
       if (!solana?.isPhantom) {
         window.open("https://phantom.app/", "_blank");
         return;
       }
-
       const response = await solana.connect();
       if (response.publicKey) {
-        setWalletAddress(response.publicKey.toString());
+        const addr = response.publicKey.toString();
+        setWalletAddress(addr);
         setIsConnected(true);
+        onWalletChange(true, addr); // Update parent's state
         setStatus("Wallet connected successfully!");
-        //getWalletBalance();
       }
     } catch (error) {
       console.error(error);
@@ -126,7 +123,6 @@ export function WalletConnection() {
   const disconnectWallet = async () => {
     try {
       const { solana } = window as any;
-
       if (solana) {
         await solana.disconnect();
         setWalletAddress("");
@@ -134,6 +130,7 @@ export function WalletConnection() {
         setBalance(null);
         setUsdValue(null);
         setStatus("Wallet disconnected");
+        onWalletChange(false, ""); // Notify parent that wallet is disconnected
       }
     } catch (error) {
       console.error(error);
@@ -165,13 +162,8 @@ export function WalletConnection() {
 
   useEffect(() => {
     if (isConnected) {
-      // Initial balance fetch
       getWalletBalance();
-
-      // Set up interval for periodic updates
       const intervalId = setInterval(getWalletBalance, 30000);
-
-      // Cleanup interval on disconnect or component unmount
       return () => clearInterval(intervalId);
     }
   }, [isConnected]);
