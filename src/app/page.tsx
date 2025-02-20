@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable */
+
 import { useState } from "react";
 import { WalletConnection } from "@/components/wallet-connection";
 import { MemeCoinGenerator } from "@/components/meme-coin-generator";
@@ -22,10 +24,10 @@ export default function Home() {
 
         <WalletConnection onWalletChange={handleWalletConnection} />
 
-        {/* <MemeCoinGenerator
+        <MemeCoinGenerator
           isWalletConnected={isConnected}
           walletAddress={walletAddress}
-        /> */}
+        />
       </div>
     </main>
   );
